@@ -7,6 +7,7 @@ Test tool to fetch and display packets without sending to MQTT.
 import json
 import sys
 import argparse
+import traceback
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 from base64 import b64decode
@@ -27,10 +28,11 @@ from rich import box
 class PacketTester:
     """Test tool for Meshtastic packets."""
 
-    def __init__(self, config_path: str = "config.yaml"):
+    def __init__(self, config_path: str = "config.yaml", debug: bool = False):
         """Initialize the tester with configuration."""
         self.config = self._load_config(config_path)
         self.console = Console()
+        self.debug = debug
 
         # Decryption keys
         self.encryption_keys = [
@@ -171,8 +173,20 @@ class PacketTester:
     def _display_packet(self, packet_data: Dict[str, Any], source_name: str, index: int):
         """Display a single packet in a nice format."""
         try:
+            # Debug mode: show raw packet structure
+            if self.debug:
+                self.console.print(f"\n[yellow]━━━ Debug: Raw Packet #{index + 1} ━━━[/yellow]")
+                self.console.print(Panel(
+                    Syntax(json.dumps(packet_data, indent=2, default=str), "json", theme="monokai"),
+                    title="Raw Packet Data",
+                    border_style="yellow"
+                ))
+                self.console.print(f"[dim]Keys in packet: {list(packet_data.keys())}[/dim]\n")
+
             raw_data = packet_data.get('data')
             if not raw_data:
+                if self.debug:
+                    self.console.print(f"[red]No 'data' field in packet[/red]")
                 return
 
             # Try to decode as ServiceEnvelope (MQTT format)
@@ -235,9 +249,13 @@ class PacketTester:
 
             except Exception as e:
                 self.console.print(f"[red]Error processing packet: {e}[/red]")
+                if self.debug:
+                    self.console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
         except Exception as e:
             self.console.print(f"[red]Error in display: {e}[/red]")
+            if self.debug:
+                self.console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
     def test_source(self, source_name: Optional[str] = None, limit: int = 10):
         """Test fetching and decoding packets from sources."""
@@ -319,11 +337,16 @@ def main():
         action='store_true',
         help='List all configured sources and exit'
     )
+    parser.add_argument(
+        '-d', '--debug',
+        action='store_true',
+        help='Enable debug mode to show raw packet data and detailed errors'
+    )
 
     args = parser.parse_args()
 
     try:
-        tester = PacketTester(args.config)
+        tester = PacketTester(args.config, debug=args.debug)
 
         if args.list_sources:
             tester.list_sources()
