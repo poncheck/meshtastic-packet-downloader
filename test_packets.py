@@ -148,20 +148,54 @@ class PacketTester:
             try:
                 telemetry = mesh_pb2.Telemetry()
                 telemetry.ParseFromString(payload)
+
+                parts = []
+
+                # Device metrics
                 if telemetry.HasField('device_metrics'):
                     dm = telemetry.device_metrics
-                    return f"Battery: {dm.battery_level}%, Voltage: {dm.voltage:.2f}V, Ch.Util: {dm.channel_utilization:.1f}%, AirUtil: {dm.air_util_tx:.1f}%"
-                elif telemetry.HasField('environment_metrics'):
+                    if dm.battery_level > 0:
+                        parts.append(f"Battery: {dm.battery_level}%")
+                    if dm.voltage > 0:
+                        parts.append(f"Voltage: {dm.voltage:.2f}V")
+                    if dm.channel_utilization > 0:
+                        parts.append(f"Ch.Util: {dm.channel_utilization:.1f}%")
+                    if dm.air_util_tx > 0:
+                        parts.append(f"AirUtil: {dm.air_util_tx:.1f}%")
+
+                # Environment metrics
+                if telemetry.HasField('environment_metrics'):
                     em = telemetry.environment_metrics
-                    parts = []
                     if em.temperature != 0:
                         parts.append(f"Temp: {em.temperature:.1f}°C")
                     if em.relative_humidity != 0:
                         parts.append(f"Humidity: {em.relative_humidity:.1f}%")
                     if em.barometric_pressure != 0:
                         parts.append(f"Pressure: {em.barometric_pressure:.1f}hPa")
-                    return ", ".join(parts) if parts else "<environment data>"
-            except:
+                    if em.voltage != 0:
+                        parts.append(f"Voltage: {em.voltage:.2f}V")
+
+                # Power metrics
+                if telemetry.HasField('power_metrics'):
+                    pm = telemetry.power_metrics
+                    if pm.ch1_voltage > 0:
+                        parts.append(f"CH1: {pm.ch1_voltage:.2f}V")
+                    if pm.ch1_current > 0:
+                        parts.append(f"CH1 Current: {pm.ch1_current:.2f}mA")
+
+                # Time field
+                if telemetry.time > 0:
+                    parts.append(f"Time: {telemetry.time}")
+
+                if parts:
+                    return ", ".join(parts)
+                else:
+                    # If no fields found, show structure in debug
+                    return f"<Telemetry: {str(telemetry)[:100]}>"
+
+            except Exception as e:
+                if self.debug:
+                    self.console.print(f"[yellow]Telemetry decode error: {e}[/yellow]")
                 pass
 
         # Default: show hex
@@ -328,6 +362,20 @@ class PacketTester:
                             self.console.print(f"[dim]Raw hex: {mesh_packet.decoded.payload.hex()}[/dim]")
                             self.console.print(f"[dim]Length: {len(mesh_packet.decoded.payload)} bytes[/dim]")
                             self.console.print(f"[dim]Portnum: {mesh_packet.decoded.portnum} ({portnum_name})[/dim]")
+
+                            # Try to decode telemetry in debug mode to show structure
+                            if "TELEMETRY" in portnum_name:
+                                try:
+                                    telemetry = mesh_pb2.Telemetry()
+                                    telemetry.ParseFromString(mesh_packet.decoded.payload)
+                                    self.console.print(f"\n[cyan]━━━ Parsed Telemetry Structure ━━━[/cyan]")
+                                    self.console.print(Panel(
+                                        str(telemetry),
+                                        title="Telemetry (Protobuf)",
+                                        border_style="green"
+                                    ))
+                                except Exception as e:
+                                    self.console.print(f"[red]Failed to parse telemetry: {e}[/red]")
 
                 # Display the packet
                 title = f"Packet #{index + 1}"
