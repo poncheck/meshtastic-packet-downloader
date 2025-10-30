@@ -239,20 +239,20 @@ class MeshtasticDownloader:
                 envelope_bytes = service_envelope.SerializeToString()
 
                 # Publish to MQTT in Meshtastic format
-                # Topic format: msh/2/c/[channel]/[gateway_id] for protobuf
-                # or use configured prefix
+                # Topic format: msh/2/c/[channel]/![gateway_id] for protobuf
+                # or: msh/2/json/[channel]/![gateway_id] for JSON
                 channel_name = self.config['mqtt'].get('channel_name', 'LongFast')
 
                 if self.config['mqtt'].get('use_json', False):
                     # JSON format (optional)
-                    topic = f"{self.config['mqtt']['topic_prefix']}/json/{channel_name}/{gateway_id}"
+                    topic = f"{self.config['mqtt']['topic_prefix']}/json/{channel_name}/!{gateway_id}"
                     # Convert to JSON-serializable format
                     from google.protobuf import json_format
                     payload_str = json_format.MessageToJson(service_envelope)
                     payload = payload_str.encode('utf-8')
                 else:
                     # Protobuf format (native Meshtastic)
-                    topic = f"{self.config['mqtt']['topic_prefix']}/c/{channel_name}/{gateway_id}"
+                    topic = f"{self.config['mqtt']['topic_prefix']}/c/{channel_name}/!{gateway_id}"
                     payload = envelope_bytes
 
                 self.mqtt_client.publish(

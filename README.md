@@ -216,19 +216,21 @@ Packets are published in **native Meshtastic format** (ServiceEnvelope protobuf)
 
 **Protobuf (domyślny / default):**
 ```
-msh/2/c/[channel_name]/[gateway_id]
+msh/2/c/[channel_name]/![gateway_id]
 ```
+Przykład / Example: `msh/2/c/LongFast/!ba0ca350`
 
 **JSON (opcjonalnie / optional):**
 ```
-msh/2/json/[channel_name]/[gateway_id]
+msh/2/json/[channel_name]/![gateway_id]
 ```
+Przykład / Example: `msh/2/json/LongFast/!ba0ca350`
 
 Gdzie / Where:
 - `msh/2` = Meshtastic wersja 2 protokołu
 - `c` = compact (protobuf) lub `json` = JSON format
 - `[channel_name]` = nazwa kanału (np. "LongFast")
-- `[gateway_id]` = ID gateway który odebrał pakiet (hex, np. "ba0ca350")
+- `![gateway_id]` = ID gateway który odebrał pakiet z `!` (np. "!ba0ca350")
 
 ### Payload Format
 

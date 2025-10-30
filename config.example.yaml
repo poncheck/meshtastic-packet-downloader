@@ -25,8 +25,9 @@ mqtt:
   username: "your_username"  # CHANGE THIS
   password: "your_password"  # CHANGE THIS
   # Topic prefix - Meshtastic standard format
-  # Full topic will be: [prefix]/c/[channel_name]/[gateway_id] for protobuf
-  # or: [prefix]/json/[channel_name]/[gateway_id] for JSON
+  # Full topic will be: [prefix]/c/[channel_name]/![gateway_id] for protobuf
+  # or: [prefix]/json/[channel_name]/![gateway_id] for JSON
+  # Example: msh/2/c/LongFast/!ba0ca350
   topic_prefix: "msh/2"  # Standard Meshtastic format (msh/2/c/... or msh/2/json/...)
   channel_name: "LongFast"  # Meshtastic channel name (LongFast, MediumSlow, etc.)
   use_json: false  # false = protobuf (native), true = JSON format
