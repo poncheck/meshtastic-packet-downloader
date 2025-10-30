@@ -183,10 +183,11 @@ class PacketTester:
                 ))
                 self.console.print(f"[dim]Keys in packet: {list(packet_data.keys())}[/dim]\n")
 
-            raw_data = packet_data.get('data')
+            # API uses 'Data' with capital D
+            raw_data = packet_data.get('Data') or packet_data.get('data')
             if not raw_data:
                 if self.debug:
-                    self.console.print(f"[red]No 'data' field in packet[/red]")
+                    self.console.print(f"[red]No 'Data' or 'data' field in packet[/red]")
                 return
 
             # Try to decode as ServiceEnvelope (MQTT format)
@@ -219,15 +220,22 @@ class PacketTester:
                 table.add_row("Channel", f"{mesh_packet.channel}")
                 table.add_row("Hop Limit", f"{mesh_packet.hop_limit}")
 
-                # Signal info
-                if packet_data.get('rssi'):
-                    table.add_row("RSSI", f"{packet_data['rssi']} dBm")
-                if packet_data.get('snr'):
-                    table.add_row("SNR", f"{packet_data['snr']} dB")
+                # Gateway info
+                if packet_data.get('Gateway'):
+                    table.add_row("Gateway", f"!{packet_data['Gateway']}")
 
-                # Timestamp
-                if packet_data.get('timestamp'):
-                    table.add_row("Timestamp", packet_data['timestamp'])
+                # Timestamp (API uses 'Time' with capital T)
+                if packet_data.get('Time') or packet_data.get('timestamp'):
+                    time_val = packet_data.get('Time') or packet_data.get('timestamp')
+                    table.add_row("Time", time_val)
+
+                # Signal info (check both cases)
+                if packet_data.get('rssi') or packet_data.get('RSSI'):
+                    rssi = packet_data.get('rssi') or packet_data.get('RSSI')
+                    table.add_row("RSSI", f"{rssi} dBm")
+                if packet_data.get('snr') or packet_data.get('SNR'):
+                    snr = packet_data.get('snr') or packet_data.get('SNR')
+                    table.add_row("SNR", f"{snr} dB")
 
                 # Encryption status
                 if mesh_packet.encrypted:

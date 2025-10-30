@@ -161,8 +161,10 @@ class MeshtasticDownloader:
     def _process_packet(self, packet_data: Dict[str, Any], source_name: str) -> bool:
         """Process a single packet: decode and publish to MQTT."""
         try:
-            # Generate unique packet ID
-            packet_id = f"{source_name}_{packet_data.get('id', '')}_{packet_data.get('timestamp', '')}"
+            # Generate unique packet ID (API uses 'Time' with capital T, 'Data' with capital D)
+            time_val = packet_data.get('Time') or packet_data.get('timestamp', '')
+            data_id = packet_data.get('id', '') or packet_data.get('Gateway', '')
+            packet_id = f"{source_name}_{data_id}_{time_val}"
 
             # Skip if already processed
             if packet_id in self.processed_packets:
@@ -170,9 +172,9 @@ class MeshtasticDownloader:
                 return False
 
             # Extract packet information
-            raw_data = packet_data.get('data')
+            raw_data = packet_data.get('Data') or packet_data.get('data')
             if not raw_data:
-                self.logger.warning(f"No data in packet: {packet_id}")
+                self.logger.warning(f"No Data in packet: {packet_id}")
                 return False
 
             # Try to decode as ServiceEnvelope (MQTT format)
@@ -204,12 +206,13 @@ class MeshtasticDownloader:
                     'id': mesh_packet.id,
                     'from': mesh_packet.from_node,
                     'to': mesh_packet.to_node,
-                    'timestamp': packet_data.get('timestamp', ''),
+                    'timestamp': packet_data.get('Time') or packet_data.get('timestamp', ''),
+                    'gateway': packet_data.get('Gateway'),
                     'channel': mesh_packet.channel,
                     'hop_limit': mesh_packet.hop_limit,
                     'want_ack': mesh_packet.want_ack,
-                    'rssi': packet_data.get('rssi'),
-                    'snr': packet_data.get('snr'),
+                    'rssi': packet_data.get('rssi') or packet_data.get('RSSI'),
+                    'snr': packet_data.get('snr') or packet_data.get('SNR'),
                 }
 
                 # Add decoded data if available
