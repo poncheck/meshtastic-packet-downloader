@@ -17,3 +17,6 @@ cryptography>=41.0.0
 
 # Protobuf
 protobuf>=4.24.0
+
+# Rich terminal formatting (for test tool)
+rich>=13.0.0

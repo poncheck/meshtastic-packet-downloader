@@ -14,6 +14,7 @@ Script for downloading, decoding, and forwarding Meshtastic packets from API sou
 - ✅ Automatyczne ponowne próby przy błędach / Automatic retry on errors
 - ✅ Rotacja logów / Log rotation
 - ✅ Obsługa wielu kluczy szyfrowania / Support for multiple encryption keys
+- ✅ Narzędzie testowe do podglądu pakietów / Test tool for packet preview (without MQTT)
 
 ## Wymagania / Requirements
 
@@ -105,6 +106,46 @@ meshtastic:
   additional_keys:
     - "inny_klucz_base64"
 ```
+
+## Testowanie / Testing
+
+Przed uruchomieniem głównego skryptu, możesz przetestować pobieranie i dekodowanie pakietów bez wysyłania do MQTT:
+
+Before running the main script, you can test packet download and decoding without sending to MQTT:
+
+```bash
+# Aktywuj środowisko wirtualne / Activate virtual environment
+source venv/bin/activate
+
+# Wyświetl 10 najnowszych pakietów / Display 10 most recent packets
+python test_packets.py
+
+# Wyświetl 20 pakietów / Display 20 packets
+python test_packets.py --limit 20
+
+# Testuj konkretne źródło / Test specific source
+python test_packets.py --source "Zachód"
+
+# Lista wszystkich źródeł / List all sources
+python test_packets.py --list-sources
+
+# Pomoc / Help
+python test_packets.py --help
+```
+
+Narzędzie testowe wyświetla szczegółowe informacje o pakietach:
+- ID pakietu i węzłów (from/to)
+- Typ wiadomości (TEXT, POSITION, TELEMETRY, etc.)
+- Zdekodowaną zawartość (tekst, współrzędne, dane telemetryczne)
+- Informacje o sygnale (RSSI, SNR)
+- Status deszyfrowania
+
+Test tool displays detailed packet information:
+- Packet and node IDs (from/to)
+- Message type (TEXT, POSITION, TELEMETRY, etc.)
+- Decoded content (text, coordinates, telemetry data)
+- Signal information (RSSI, SNR)
+- Decryption status
 
 ## Uruchomienie / Running
 
