@@ -1,0 +1,51 @@
+# Meshtastic Packet Downloader Configuration Example
+# Copy this file to config.yaml or config.local.yaml and adjust the settings
+
+# API sources - list of URLs to fetch packets from
+api_sources:
+  - name: "Zachód"
+    url: "https://lorastats.pl/API/Zach%C3%B3d/PacketsRaw/JSON"
+    enabled: true
+  # Add more sources here:
+  # - name: "East"
+  #   url: "https://example.com/api/packets"
+  #   enabled: true
+
+# API request settings
+api_settings:
+  user_agent: "Meshtastic Packet Downloader - info@meshtastic.info.pl - https://meshtastic.info.pl"
+  timeout: 30  # seconds
+  retry_attempts: 3
+  retry_delay: 5  # seconds
+
+# MQTT broker settings
+mqtt:
+  broker: "mqtt.example.com"  # CHANGE THIS
+  port: 1883
+  username: "your_username"  # CHANGE THIS
+  password: "your_password"  # CHANGE THIS
+  topic_prefix: "meshtastic/packets"
+  qos: 1  # MQTT QoS level (0, 1, or 2)
+  retain: false
+  client_id: "meshtastic_downloader"
+
+# Meshtastic decryption settings
+meshtastic:
+  # Default encryption key (AQ== is the default Meshtastic key)
+  default_key: "AQ=="
+  # You can add more keys to try if the default fails:
+  additional_keys: []
+    # - "your_custom_key_base64"
+
+# Processing settings
+processing:
+  poll_interval: 60  # seconds between API polls
+  state_file: "processed_packets.json"  # file to track processed packets
+  max_state_size: 10000  # maximum number of packet IDs to keep in state
+
+# Logging settings
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "meshtastic_downloader.log"
+  max_file_size: 10485760  # 10 MB
+  backup_count: 5

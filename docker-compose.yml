@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  meshtastic-downloader:
+    build: .
+    container_name: meshtastic-downloader
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./data:/app/data
+    environment:
+      - TZ=Europe/Warsaw
+    networks:
+      - meshtastic
+
+networks:
+  meshtastic:
+    driver: bridge
