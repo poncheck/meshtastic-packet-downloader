@@ -23,7 +23,12 @@ mqtt:
   port: 1883
   username: "your_username"
   password: "your_password"
-  topic_prefix: "meshtastic/packets"  # packets will be published to: meshtastic/packets/{node_id}
+  # Topic prefix - Meshtastic standard format
+  # Full topic will be: [prefix]/c/[channel_name]/[gateway_id] for protobuf
+  # or: [prefix]/json/[channel_name]/[gateway_id] for JSON
+  topic_prefix: "msh/2"  # Standard Meshtastic format (msh/2/c/... or msh/2/json/...)
+  channel_name: "LongFast"  # Meshtastic channel name (LongFast, MediumSlow, etc.)
+  use_json: false  # false = protobuf (native), true = JSON format
   qos: 1  # MQTT QoS level (0, 1, or 2)
   retain: false
   client_id: "meshtastic_downloader"

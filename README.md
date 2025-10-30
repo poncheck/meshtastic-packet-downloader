@@ -200,29 +200,53 @@ sudo systemctl status meshtastic-downloader
 
 ## Format danych MQTT / MQTT Data Format
 
-Pakiety są publikowane na topic: `{topic_prefix}/{node_id}`
+Pakiety są publikowane w **natywnym formacie Meshtastic** (ServiceEnvelope protobuf).
 
-Packets are published to topic: `{topic_prefix}/{node_id}`
+Packets are published in **native Meshtastic format** (ServiceEnvelope protobuf).
 
-Przykładowy payload / Example payload:
-```json
-{
-  "source": "Zachód",
-  "id": 123456789,
-  "from": 862947392,
-  "to": 4294967295,
-  "timestamp": "2025-10-30T12:00:00Z",
-  "channel": 0,
-  "hop_limit": 3,
-  "want_ack": false,
-  "rssi": -90,
-  "snr": 8.5,
-  "decoded": {
-    "portnum": "TEXT_MESSAGE_APP",
-    "payload": "48656c6c6f"
-  }
-}
+### Format Topic / Topic Format
+
+**Protobuf (domyślny / default):**
 ```
+msh/2/c/[channel_name]/[gateway_id]
+```
+
+**JSON (opcjonalnie / optional):**
+```
+msh/2/json/[channel_name]/[gateway_id]
+```
+
+Gdzie / Where:
+- `msh/2` = Meshtastic wersja 2 protokołu
+- `c` = compact (protobuf) lub `json` = JSON format
+- `[channel_name]` = nazwa kanału (np. "LongFast")
+- `[gateway_id]` = ID gateway który odebrał pakiet (hex, np. "ba0ca350")
+
+### Payload Format
+
+**Protobuf (domyślny):**
+Payload to surowy protobuf `ServiceEnvelope` zawierający `MeshPacket` - identyczny format jak natywne urządzenia Meshtastic.
+
+Payload is raw protobuf `ServiceEnvelope` containing `MeshPacket` - identical format to native Meshtastic devices.
+
+**JSON (jeśli `use_json: true` w konfigu):**
+Payload to JSON reprezentacja ServiceEnvelope.
+
+Payload is JSON representation of ServiceEnvelope.
+
+### Kompatybilność / Compatibility
+
+Ten format jest **w pełni kompatybilny** z:
+- MQTT Explorer
+- Meshtastic aplikacjami (Android/iOS/Web)
+- mqtt-meshtastic-bridge
+- Innymi narzędziami Meshtastic
+
+This format is **fully compatible** with:
+- MQTT Explorer
+- Meshtastic apps (Android/iOS/Web)
+- mqtt-meshtastic-bridge
+- Other Meshtastic tools
 
 ## Logi / Logs
 

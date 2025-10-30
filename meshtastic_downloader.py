@@ -217,31 +217,43 @@ class MeshtasticDownloader:
                     else:
                         self.logger.warning(f"Failed to decrypt packet {packet_id}")
 
-                # Prepare packet for publishing
-                packet_info = {
-                    'source': source_name,
-                    'id': mesh_packet.id,
-                    'from': getattr(mesh_packet, 'from'),
-                    'to': getattr(mesh_packet, 'to'),
-                    'timestamp': packet_data.get('Time') or packet_data.get('timestamp', ''),
-                    'gateway': packet_data.get('Gateway'),
-                    'channel': mesh_packet.channel,
-                    'hop_limit': mesh_packet.hop_limit,
-                    'want_ack': mesh_packet.want_ack,
-                    'rssi': packet_data.get('rssi') or packet_data.get('RSSI'),
-                    'snr': packet_data.get('snr') or packet_data.get('SNR'),
-                }
+                # Create ServiceEnvelope like native Meshtastic devices
+                service_envelope = mqtt_pb2.ServiceEnvelope()
 
-                # Add decoded data if available
-                if mesh_packet.HasField('decoded'):
-                    packet_info['decoded'] = {
-                        'portnum': portnums_pb2.PortNum.Name(mesh_packet.decoded.portnum),
-                        'payload': mesh_packet.decoded.payload.hex() if mesh_packet.decoded.payload else None,
-                    }
+                # Copy the MeshPacket into the envelope
+                service_envelope.packet.CopyFrom(mesh_packet)
 
-                # Publish to MQTT
-                topic = f"{self.config['mqtt']['topic_prefix']}/{hex(getattr(mesh_packet, 'from'))[2:]}"
-                payload = json.dumps(packet_info, indent=2)
+                # Set gateway ID from the API data
+                gateway_id = packet_data.get('Gateway', '')
+                if gateway_id:
+                    # Convert hex string to int
+                    try:
+                        service_envelope.gateway_id = int(gateway_id, 16)
+                    except:
+                        self.logger.warning(f"Invalid gateway ID: {gateway_id}")
+
+                # Set channel ID
+                service_envelope.channel_id = str(mesh_packet.channel)
+
+                # Serialize to protobuf bytes
+                envelope_bytes = service_envelope.SerializeToString()
+
+                # Publish to MQTT in Meshtastic format
+                # Topic format: msh/2/c/[channel]/[gateway_id] for protobuf
+                # or use configured prefix
+                channel_name = self.config['mqtt'].get('channel_name', 'LongFast')
+
+                if self.config['mqtt'].get('use_json', False):
+                    # JSON format (optional)
+                    topic = f"{self.config['mqtt']['topic_prefix']}/json/{channel_name}/{gateway_id}"
+                    # Convert to JSON-serializable format
+                    from google.protobuf import json_format
+                    payload_str = json_format.MessageToJson(service_envelope)
+                    payload = payload_str.encode('utf-8')
+                else:
+                    # Protobuf format (native Meshtastic)
+                    topic = f"{self.config['mqtt']['topic_prefix']}/c/{channel_name}/{gateway_id}"
+                    payload = envelope_bytes
 
                 self.mqtt_client.publish(
                     topic,
