@@ -212,7 +212,7 @@ class PacketTester:
                         self.console.print(f"[yellow]Packet is encrypted, attempting decryption...[/yellow]")
                         self.console.print(f"[dim]Encrypted data length: {len(mesh_packet.encrypted)} bytes[/dim]")
 
-                    nonce_bytes = mesh_packet.id.to_bytes(8, 'little') + mesh_packet.from_node.to_bytes(8, 'little')
+                    nonce_bytes = mesh_packet.id.to_bytes(8, 'little') + mesh_packet.frm.to_bytes(8, 'little')
                     decrypted = self._decrypt_packet(mesh_packet.encrypted, nonce_bytes)
                     if decrypted:
                         data_message = mesh_pb2.Data()
@@ -243,8 +243,8 @@ class PacketTester:
                 # Basic info
                 table.add_row("Source", f"[yellow]{source_name}[/yellow]")
                 table.add_row("Packet ID", f"{mesh_packet.id}")
-                table.add_row("From", f"[green]{self._format_node_id(mesh_packet.from_node)}[/green] ({mesh_packet.from_node})")
-                table.add_row("To", f"[blue]{self._format_node_id(mesh_packet.to_node)}[/blue] ({mesh_packet.to_node})")
+                table.add_row("From", f"[green]{self._format_node_id(mesh_packet.frm)}[/green] ({mesh_packet.frm})")
+                table.add_row("To", f"[blue]{self._format_node_id(mesh_packet.to)}[/blue] ({mesh_packet.to})")
                 table.add_row("Channel", f"{mesh_packet.channel}")
                 table.add_row("Hop Limit", f"{mesh_packet.hop_limit}")
 
