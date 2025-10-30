@@ -177,13 +177,30 @@ class MeshtasticDownloader:
                 self.logger.warning(f"No Data in packet: {packet_id}")
                 return False
 
-            # Try to decode as ServiceEnvelope (MQTT format)
+            # Decode the packet - try MeshPacket first, then ServiceEnvelope
             try:
-                service_envelope = mqtt_pb2.ServiceEnvelope()
-                service_envelope.ParseFromString(b64decode(raw_data))
+                decoded_bytes = b64decode(raw_data)
+                mesh_packet = None
 
-                # Extract the mesh packet
-                mesh_packet = service_envelope.packet
+                # Try direct MeshPacket first
+                try:
+                    mesh_packet = mesh_pb2.MeshPacket()
+                    mesh_packet.ParseFromString(decoded_bytes)
+                    self.logger.debug(f"Decoded packet {packet_id} as direct MeshPacket")
+                except Exception:
+                    # Try ServiceEnvelope
+                    try:
+                        service_envelope = mqtt_pb2.ServiceEnvelope()
+                        service_envelope.ParseFromString(decoded_bytes)
+                        mesh_packet = service_envelope.packet
+                        self.logger.debug(f"Decoded packet {packet_id} as ServiceEnvelope")
+                    except Exception as e:
+                        self.logger.error(f"Failed to decode packet {packet_id}: {e}")
+                        return False
+
+                if mesh_packet is None:
+                    self.logger.error(f"Could not decode packet {packet_id}")
+                    return False
 
                 # If encrypted, try to decrypt
                 if mesh_packet.encrypted:

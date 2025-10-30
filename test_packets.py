@@ -190,21 +190,60 @@ class PacketTester:
                     self.console.print(f"[red]No 'Data' or 'data' field in packet[/red]")
                 return
 
-            # Try to decode as ServiceEnvelope (MQTT format)
-            try:
-                service_envelope = mqtt_pb2.ServiceEnvelope()
-                service_envelope.ParseFromString(b64decode(raw_data))
-                mesh_packet = service_envelope.packet
+            # Decode the base64 data
+            decoded_bytes = b64decode(raw_data)
 
-                # Debug: show decoded protobuf structure
+            if self.debug:
+                self.console.print(f"\n[cyan]Base64 decoded length: {len(decoded_bytes)} bytes[/cyan]")
+                self.console.print(f"[dim]First 50 bytes (hex): {decoded_bytes[:50].hex()}[/dim]\n")
+
+            # Try to decode - first as direct MeshPacket, then as ServiceEnvelope
+            mesh_packet = None
+            decode_method = None
+
+            # Try 1: Direct MeshPacket
+            try:
+                mesh_packet = mesh_pb2.MeshPacket()
+                mesh_packet.ParseFromString(decoded_bytes)
+                decode_method = "MeshPacket (direct)"
+
                 if self.debug:
-                    self.console.print("\n[cyan]━━━ Decoded ServiceEnvelope ━━━[/cyan]")
+                    self.console.print("[green]✓ Successfully decoded as direct MeshPacket[/green]")
+                    self.console.print("\n[cyan]━━━ Decoded MeshPacket ━━━[/cyan]")
                     self.console.print(Panel(
-                        str(service_envelope),
-                        title="ServiceEnvelope (Protobuf)",
+                        str(mesh_packet),
+                        title="MeshPacket (Protobuf)",
                         border_style="cyan"
                     ))
+            except Exception as e:
+                if self.debug:
+                    self.console.print(f"[yellow]Failed to decode as direct MeshPacket: {e}[/yellow]")
 
+                # Try 2: ServiceEnvelope
+                try:
+                    service_envelope = mqtt_pb2.ServiceEnvelope()
+                    service_envelope.ParseFromString(decoded_bytes)
+                    mesh_packet = service_envelope.packet
+                    decode_method = "ServiceEnvelope"
+
+                    if self.debug:
+                        self.console.print("[green]✓ Successfully decoded as ServiceEnvelope[/green]")
+                        self.console.print("\n[cyan]━━━ Decoded ServiceEnvelope ━━━[/cyan]")
+                        self.console.print(Panel(
+                            str(service_envelope),
+                            title="ServiceEnvelope (Protobuf)",
+                            border_style="cyan"
+                        ))
+                except Exception as e2:
+                    if self.debug:
+                        self.console.print(f"[red]Failed to decode as ServiceEnvelope: {e2}[/red]")
+                    raise Exception(f"Could not decode packet as MeshPacket or ServiceEnvelope")
+
+            if mesh_packet is None:
+                return
+
+            # Now process the decoded packet
+            try:
                 # If encrypted, try to decrypt
                 decrypted_success = False
                 if mesh_packet.encrypted:
@@ -242,6 +281,8 @@ class PacketTester:
 
                 # Basic info
                 table.add_row("Source", f"[yellow]{source_name}[/yellow]")
+                if self.debug and decode_method:
+                    table.add_row("Decode Method", f"[dim]{decode_method}[/dim]")
                 table.add_row("Packet ID", f"{mesh_packet.id}")
                 from_node = getattr(mesh_packet, 'from')
                 to_node = getattr(mesh_packet, 'to')
