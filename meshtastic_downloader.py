@@ -188,7 +188,7 @@ class MeshtasticDownloader:
                 # If encrypted, try to decrypt
                 if mesh_packet.encrypted:
                     # Create nonce from packet ID and sender
-                    nonce_bytes = mesh_packet.id.to_bytes(8, 'little') + mesh_packet.frm.to_bytes(8, 'little')
+                    nonce_bytes = mesh_packet.id.to_bytes(8, 'little') + getattr(mesh_packet, 'from').to_bytes(8, 'little')
 
                     decrypted = self._decrypt_packet(mesh_packet.encrypted, nonce_bytes)
                     if decrypted:
@@ -204,8 +204,8 @@ class MeshtasticDownloader:
                 packet_info = {
                     'source': source_name,
                     'id': mesh_packet.id,
-                    'from': mesh_packet.frm,
-                    'to': mesh_packet.to,
+                    'from': getattr(mesh_packet, 'from'),
+                    'to': getattr(mesh_packet, 'to'),
                     'timestamp': packet_data.get('Time') or packet_data.get('timestamp', ''),
                     'gateway': packet_data.get('Gateway'),
                     'channel': mesh_packet.channel,
@@ -223,7 +223,7 @@ class MeshtasticDownloader:
                     }
 
                 # Publish to MQTT
-                topic = f"{self.config['mqtt']['topic_prefix']}/{hex(mesh_packet.frm)[2:]}"
+                topic = f"{self.config['mqtt']['topic_prefix']}/{hex(getattr(mesh_packet, 'from'))[2:]}"
                 payload = json.dumps(packet_info, indent=2)
 
                 self.mqtt_client.publish(
