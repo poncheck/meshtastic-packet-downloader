@@ -47,6 +47,10 @@ config.local.yml
 processed_packets.json
 *.log
 *.log.*
+data/
+
+# Generated scripts
+run.sh
 
 # Sensitive data
 secrets/

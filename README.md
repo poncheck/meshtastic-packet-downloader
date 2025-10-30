@@ -22,22 +22,48 @@ Script for downloading, decoding, and forwarding Meshtastic packets from API sou
 
 ## Instalacja / Installation
 
+### Metoda 1: Używając skryptu setup (ZALECANE / RECOMMENDED)
+
+```bash
+# Sklonuj repozytorium / Clone the repository
+git clone <repository-url>
+cd meshtastic-packet-downloader
+
+# Uruchom skrypt setup / Run setup script
+./setup.sh
+
+# Aktywuj środowisko wirtualne / Activate virtual environment
+source venv/bin/activate
+```
+
+### Metoda 2: Instalacja ręczna / Manual installation
+
 1. Sklonuj repozytorium / Clone the repository:
 ```bash
 git clone <repository-url>
 cd meshtastic-packet-downloader
 ```
 
-2. Zainstaluj zależności / Install dependencies:
+2. Utwórz wirtualne środowisko Python / Create Python virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# lub/or: venv\Scripts\activate  # Windows
+```
+
+3. Zainstaluj zależności / Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Skopiuj i dostosuj konfigurację / Copy and customize the configuration:
+4. Skopiuj i dostosuj konfigurację / Copy and customize the configuration:
 ```bash
-cp config.yaml config.local.yaml
-nano config.local.yaml
+cp config.example.yaml config.yaml
+nano config.yaml
 ```
+
+**WAŻNE / IMPORTANT:** Zawsze aktywuj środowisko wirtualne przed uruchomieniem skryptu!
+Always activate the virtual environment before running the script!
 
 ## Konfiguracja / Configuration
 
@@ -84,12 +110,17 @@ meshtastic:
 
 ### Standardowe uruchomienie / Standard run:
 ```bash
-python3 meshtastic_downloader.py
+# Aktywuj środowisko wirtualne / Activate virtual environment
+source venv/bin/activate
+
+# Uruchom skrypt / Run script
+python meshtastic_downloader.py
 ```
 
 ### Z alternatywną konfiguracją / With alternative config:
 ```bash
-python3 meshtastic_downloader.py config.local.yaml
+source venv/bin/activate
+python meshtastic_downloader.py config.local.yaml
 ```
 
 ### Jako usługa systemd / As systemd service:
@@ -107,13 +138,16 @@ After=network.target
 Type=simple
 User=your_user
 WorkingDirectory=/path/to/meshtastic-packet-downloader
-ExecStart=/usr/bin/python3 /path/to/meshtastic-packet-downloader/meshtastic_downloader.py
+ExecStart=/path/to/meshtastic-packet-downloader/venv/bin/python /path/to/meshtastic-packet-downloader/meshtastic_downloader.py
 Restart=always
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+**Uwaga:** Zmień `your_user` i ścieżki na właściwe wartości!
+**Note:** Change `your_user` and paths to appropriate values!
 
 Następnie / Then:
 ```bash
@@ -169,6 +203,17 @@ Processed packets are tracked in `processed_packets.json` file to avoid duplicat
 
 ## Rozwiązywanie problemów / Troubleshooting
 
+### Błąd "externally-managed-environment" przy instalacji pakietów
+Ten błąd występuje w nowoczesnych wersjach Pythona/Linuxa. **Użyj wirtualnego środowiska** (venv) jak opisano w sekcji instalacji. Nigdy nie używaj `--break-system-packages`!
+
+This error occurs in modern Python/Linux versions. **Use a virtual environment** (venv) as described in the installation section. Never use `--break-system-packages`!
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 ### Błąd połączenia z MQTT / MQTT connection error
 Sprawdź ustawienia brokera, użytkownika i hasła w konfiguracji.
 
@@ -183,6 +228,15 @@ Check if you're using the correct encryption key.
 Sprawdź URL źródła i upewnij się, że API jest dostępne.
 
 Check the source URL and ensure the API is accessible.
+
+### Brak modułu "venv"
+Jeśli otrzymujesz błąd o braku modułu venv, zainstaluj `python3-venv`:
+
+If you get an error about missing venv module, install `python3-venv`:
+
+```bash
+sudo apt install python3-venv python3-full
+```
 
 ## Kontakt / Contact
 
