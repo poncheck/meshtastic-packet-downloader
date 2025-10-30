@@ -38,6 +38,7 @@ env/
 .DS_Store
 
 # Local configuration
+config.yaml  # User's actual config (copy from config.example.yaml)
 config.local.yaml
 config.local.yml
 *.local.yaml

@@ -32,10 +32,18 @@ cd meshtastic-packet-downloader
 
 # Uruchom skrypt setup / Run setup script
 ./setup.sh
+# (Automatycznie tworzy config.yaml z config.example.yaml)
+
+# Edytuj konfigurację / Edit configuration
+nano config.yaml
 
 # Aktywuj środowisko wirtualne / Activate virtual environment
 source venv/bin/activate
 ```
+
+**Uwaga:** Plik `config.yaml` jest lokalny i ignorowany przez git. Możesz bezpiecznie edytować go bez konfliktów przy `git pull`.
+
+**Note:** The `config.yaml` file is local and ignored by git. You can safely edit it without conflicts during `git pull`.
 
 ### Metoda 2: Instalacja ręczna / Manual installation
 
