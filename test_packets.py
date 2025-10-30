@@ -143,6 +143,36 @@ class PacketTester:
             except:
                 pass
 
+        # Try to decode traceroute
+        elif "TRACEROUTE" in portnum_name:
+            try:
+                route = mesh_pb2.RouteDiscovery()
+                route.ParseFromString(payload)
+
+                # Build route display
+                route_parts = []
+                for hop in route.route:
+                    node_id = hex(hop)[2:] if hop != 0 else "unknown"
+                    route_parts.append(f"!{node_id}")
+
+                route_str = " → ".join(route_parts) if route_parts else "No route recorded"
+
+                # Add SNR values if available
+                snr_parts = []
+                for snr in route.route_back:
+                    if snr != 0:
+                        snr_parts.append(f"{snr:.1f}dB")
+
+                result = f"Route: {route_str}"
+                if snr_parts:
+                    result += f" | SNR: {', '.join(snr_parts)}"
+
+                return result
+            except Exception as e:
+                if self.debug:
+                    self.console.print(f"[yellow]Traceroute decode error: {e}[/yellow]")
+                pass
+
         # Try to decode telemetry
         elif "TELEMETRY" in portnum_name:
             try:
@@ -399,6 +429,35 @@ class PacketTester:
 
                                 except Exception as e:
                                     self.console.print(f"[red]Failed to parse telemetry: {e}[/red]")
+                                    import traceback
+                                    self.console.print(f"[dim]{traceback.format_exc()}[/dim]")
+
+                            # Try to decode traceroute in debug mode to show structure
+                            if "TRACEROUTE" in portnum_name:
+                                try:
+                                    route = mesh_pb2.RouteDiscovery()
+                                    route.ParseFromString(mesh_packet.decoded.payload)
+                                    self.console.print(f"\n[cyan]━━━ Parsed RouteDiscovery Structure ━━━[/cyan]")
+                                    self.console.print(Panel(
+                                        str(route),
+                                        title="RouteDiscovery (Protobuf)",
+                                        border_style="green"
+                                    ))
+
+                                    # Show route hops
+                                    self.console.print(f"\n[cyan]━━━ Route Hops ━━━[/cyan]")
+                                    for i, hop in enumerate(route.route):
+                                        node_hex = hex(hop)[2:] if hop != 0 else "0"
+                                        self.console.print(f"  Hop {i+1}: !{node_hex} ({hop})")
+
+                                    # Show SNR back
+                                    if route.route_back:
+                                        self.console.print(f"\n[cyan]━━━ Return SNR Values ━━━[/cyan]")
+                                        for i, snr in enumerate(route.route_back):
+                                            self.console.print(f"  Hop {i+1} SNR: {snr:.2f} dB")
+
+                                except Exception as e:
+                                    self.console.print(f"[red]Failed to parse traceroute: {e}[/red]")
                                     import traceback
                                     self.console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
