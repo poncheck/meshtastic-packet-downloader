@@ -374,8 +374,33 @@ class PacketTester:
                                         title="Telemetry (Protobuf)",
                                         border_style="green"
                                     ))
+
+                                    # Show detailed field inspection
+                                    self.console.print(f"\n[cyan]━━━ Telemetry Fields Inspection ━━━[/cyan]")
+                                    self.console.print(f"[dim]Time: {telemetry.time}[/dim]")
+                                    self.console.print(f"[dim]HasField('device_metrics'): {telemetry.HasField('device_metrics')}[/dim]")
+                                    self.console.print(f"[dim]HasField('environment_metrics'): {telemetry.HasField('environment_metrics')}[/dim]")
+                                    self.console.print(f"[dim]HasField('power_metrics'): {telemetry.HasField('power_metrics')}[/dim]")
+
+                                    if telemetry.HasField('device_metrics'):
+                                        dm = telemetry.device_metrics
+                                        self.console.print(f"\n[green]Device Metrics:[/green]")
+                                        self.console.print(f"  battery_level: {dm.battery_level}")
+                                        self.console.print(f"  voltage: {dm.voltage}")
+                                        self.console.print(f"  channel_utilization: {dm.channel_utilization}")
+                                        self.console.print(f"  air_util_tx: {dm.air_util_tx}")
+
+                                    if telemetry.HasField('environment_metrics'):
+                                        em = telemetry.environment_metrics
+                                        self.console.print(f"\n[green]Environment Metrics:[/green]")
+                                        self.console.print(f"  temperature: {em.temperature}")
+                                        self.console.print(f"  relative_humidity: {em.relative_humidity}")
+                                        self.console.print(f"  barometric_pressure: {em.barometric_pressure}")
+
                                 except Exception as e:
                                     self.console.print(f"[red]Failed to parse telemetry: {e}[/red]")
+                                    import traceback
+                                    self.console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
                 # Display the packet
                 title = f"Packet #{index + 1}"
