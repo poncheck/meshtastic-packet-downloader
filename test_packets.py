@@ -196,9 +196,22 @@ class PacketTester:
                 service_envelope.ParseFromString(b64decode(raw_data))
                 mesh_packet = service_envelope.packet
 
+                # Debug: show decoded protobuf structure
+                if self.debug:
+                    self.console.print("\n[cyan]━━━ Decoded ServiceEnvelope ━━━[/cyan]")
+                    self.console.print(Panel(
+                        str(service_envelope),
+                        title="ServiceEnvelope (Protobuf)",
+                        border_style="cyan"
+                    ))
+
                 # If encrypted, try to decrypt
                 decrypted_success = False
                 if mesh_packet.encrypted:
+                    if self.debug:
+                        self.console.print(f"[yellow]Packet is encrypted, attempting decryption...[/yellow]")
+                        self.console.print(f"[dim]Encrypted data length: {len(mesh_packet.encrypted)} bytes[/dim]")
+
                     nonce_bytes = mesh_packet.id.to_bytes(8, 'little') + mesh_packet.from_node.to_bytes(8, 'little')
                     decrypted = self._decrypt_packet(mesh_packet.encrypted, nonce_bytes)
                     if decrypted:
@@ -206,6 +219,21 @@ class PacketTester:
                         data_message.ParseFromString(decrypted)
                         mesh_packet.decoded.CopyFrom(data_message)
                         decrypted_success = True
+
+                        if self.debug:
+                            self.console.print(f"[green]✓ Decryption successful![/green]")
+                            self.console.print("\n[cyan]━━━ Decrypted Data Message ━━━[/cyan]")
+                            self.console.print(Panel(
+                                str(data_message),
+                                title="Decrypted Data (Protobuf)",
+                                border_style="green"
+                            ))
+                    else:
+                        if self.debug:
+                            self.console.print(f"[red]✗ Decryption failed with all available keys[/red]")
+                else:
+                    if self.debug:
+                        self.console.print(f"[cyan]Packet is not encrypted[/cyan]")
 
                 # Create display table
                 table = Table(show_header=False, box=box.SIMPLE, padding=(0, 1))
@@ -251,9 +279,20 @@ class PacketTester:
                         payload_str = self._decode_payload(mesh_packet.decoded.payload, mesh_packet.decoded.portnum)
                         table.add_row("Payload", payload_str)
 
+                        # Debug: show raw payload details
+                        if self.debug:
+                            self.console.print(f"\n[cyan]━━━ Payload Details ━━━[/cyan]")
+                            self.console.print(f"[dim]Raw hex: {mesh_packet.decoded.payload.hex()}[/dim]")
+                            self.console.print(f"[dim]Length: {len(mesh_packet.decoded.payload)} bytes[/dim]")
+                            self.console.print(f"[dim]Portnum: {mesh_packet.decoded.portnum} ({portnum_name})[/dim]")
+
                 # Display the packet
                 title = f"Packet #{index + 1}"
                 self.console.print(Panel(table, title=title, border_style="blue"))
+
+                # Add separator in debug mode
+                if self.debug:
+                    self.console.print("[dim]" + "─" * 80 + "[/dim]\n")
 
             except Exception as e:
                 self.console.print(f"[red]Error processing packet: {e}[/red]")
